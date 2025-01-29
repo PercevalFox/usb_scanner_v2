@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>USB Scanner Dashboard - VINCI Autoroutes</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="icon" type="image/png" href="/favicon.ico" />
+</head>
+<body>
+    <header>
+        <div class="header-left">
+            <img src="/logo_vinci.png" alt="Vinci Autoroutes" class="logo" />
+            <div class="brand-title">VINCI Autoroutes</div>
+        </div>
+        <div class="header-right">
+            <h1>USB Scanner Dashboard</h1>
+            <p class="slogan">Un outil de sécurité fiable et performant</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Barre du haut : logs en temps réel et stats système -->
+        <div class="top-bar">
+            <div class="top-bar-block">
+                <h2>Scan en cours</h2>
+                <div id="scanLogs">Chargement...</div>
+            </div>
+            <div class="top-bar-block">
+                <h2>Statistiques Système</h2>
+                <p id="cpuUsage">CPU : --%</p>
+                <p id="ramUsage">RAM : --%</p>
+                <p id="diskUsage">Disque : --%</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Panneau de gauche : historique -->
+            <div class="left-panel">
+                <h2>Historique des Scans</h2>
+                <div id="historyContainer">Chargement...</div>
+            </div>
+        </div>
+
+        <!-- Pied de page -->
+        <footer class="footer">
+            <p>USB Scanner - par <strong>Steven LE BRIS</strong> © 2024</p>
+            <a href="https://github.com/PercevalFox" target="_blank">GitLab PercevalFox</a>
+        </footer>
+    </div>
+
+    <!-- Scripts pour appeler les API Flask -->
+    <script>
+        async function fetchSystemStats() {
+            try {
+                const response = await fetch('/api/system');
+                const data = await response.json();
+                document.getElementById('cpuUsage').textContent = `CPU : ${data.cpu}%`;
+                document.getElementById('ramUsage').textContent = `RAM : ${data.memory}%`;
+                document.getElementById('diskUsage').textContent = `Disque : ${data.disk}%`;
+            } catch (error) {
+                console.error("Erreur lors de la récupération des statistiques système :", error);
+            }
+        }
+
+        async function fetchScanLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                const logs = await response.json();
+                document.getElementById('scanLogs').innerHTML = logs
+                    .map(line => {
+                        const cssClass = line.toLowerCase().includes("infected")
+                            ? "log-line infected"
+                            : "log-line";
+                        return `<div class="${cssClass}">${line}</div>`;
+                    })
+                    .join('');
+            } catch (error) {
+                console.error("Erreur lors de la récupération des logs :", error);
+                document.getElementById('scanLogs').innerHTML = '<p>Erreur lors du chargement des logs.</p>';
+            }
+        }
+
+        async function fetchHistory() {
+            try {
+                const response = await fetch('/api/history');
+                const history = await response.json();
+                const container = document.getElementById('historyContainer');
+                container.innerHTML = history.length > 0
+                    ? history.map(item => `<p><a href="/api/history/${item}" target="_blank">${item}</a></p>`).join('')
+                    : '<p>Aucun historique disponible.</p>';
+            } catch (error) {
+                console.error("Erreur lors de la récupération de l\'historique :", error);
+                document.getElementById('historyContainer').innerHTML = '<p>Erreur lors du chargement de l\'historique.</p>';
+            }
+        }
+
+        // Intervalles de mise à jour
+        setInterval(fetchSystemStats, 5000);   // stats système toutes les 5s
+        setInterval(fetchScanLogs, 5000);      // logs toutes les 5s
+        setInterval(fetchHistory, 10000);       // historique toutes les 10s
+    </script>
+</body>
+</html>
