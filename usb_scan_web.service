@@ -1,0 +1,15 @@
+[Unit]
+Description=Flask USB Scanner Web Server
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/usb_scan_web.py
+WorkingDirectory=/usr/local/bin
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+User=foxink
+
+[Install]
+WantedBy=multi-user.target
